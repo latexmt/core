@@ -1,0 +1,32 @@
+[project]
+name = "latexmt-core"
+version = "1.0.0"
+authors = [
+  { name="Calvin Hoy", email="calvin.hoy@student.uibk.ac.at" },
+]
+description = "Core functionality for LaTeXMT"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: Linux",
+]
+dependencies = [
+  "numpy",
+  "pylatexenc==3.0a30",
+]
+
+[project.optional-dependencies]
+opus = [
+  "torch==2.6.0",
+  "transformers[torch]",
+  "tokenizers",
+  "sentencepiece",
+  "sacremoses"
+]
+opus-huggingface = ["requests"]
+deepl = ["deepl"]
+openai = ["openai"]
+
+[project.urls]
+Homepage = "https://git.uibk.ac.at/csaz9385/latexmt-core"
+Issues = "https://git.uibk.ac.at/csaz9385/latexmt-core/issues"
