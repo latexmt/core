@@ -93,8 +93,6 @@ class CharsArgumentParser(LatexParserBase):
 
         arg_chars = ''
         while True:
-            pre_len = len(brace_stack)
-
             token: LatexToken = token_reader.peek_token(parsing_state)
             if token.tok == 'brace_open':
                 brace_stack.append(token.arg)
@@ -107,18 +105,21 @@ class CharsArgumentParser(LatexParserBase):
             arg_chars += token_to_text(token)
             token_reader.move_past_token(token)
 
-            post_len = len(brace_stack)
-            if pre_len != post_len and post_len == 0:
+            if len(brace_stack) == 0:
                 break
         # while True
 
+        delimiters = (('', '') if arg_chars[0] not in '{['
+                      else (arg_chars[0], arg_chars[-1]))
+        chars = arg_chars[len(delimiters[0]):len(arg_chars)-len(delimiters[1])]
+
         pos_end = token_reader.cur_pos()
         return lw.LatexGroupNode(
-            [lw.LatexCharsNode(chars=arg_chars[1:-1],
-                               pos=pos+1,
-                               pos_end=pos_end-1,
+            [lw.LatexCharsNode(chars=chars,
+                               pos=pos+len(delimiters[0]),
+                               pos_end=pos_end-len(delimiters[1]),
                                parsing_state=parsing_state)],
-            delimiters=(arg_chars[0], arg_chars[-1]),
+            delimiters=delimiters,
             pos=pos,
             pos_end=pos_end,
             parsing_state=parsing_state), None
