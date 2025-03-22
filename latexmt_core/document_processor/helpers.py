@@ -33,6 +33,11 @@ def textitem_flatlist_to_nodelist(
             case str():
                 elem_split = re.split(mask_regex, translated_elem)
                 for text, mask_idx in zip(elem_split[::2], chain(map(int, elem_split[1::2]), [None])):
+                    # special case for percent signs
+                    # TODO: other special cases?
+                    # TODO: look for a better place to do this
+                    text = text.replace('%', '\\%')
+
                     chars_node = lw.LatexCharsNode(
                         text,
                         pos=translated_pos,
