@@ -1,8 +1,9 @@
 separator_macros = [
+    'chapter',
     'section',
     'subsection',
+    'paragraph',
     'item',
-    'paragraph'
 ]
 
 nontext_macros = [
@@ -10,14 +11,17 @@ nontext_macros = [
     'autoref',
     'url',
     'cite',
+    'maketitle',
 ]
 
 translate_macro_args = {
+    'chapter': (2,),
     'section': (2,),
     'subsection': (2,),
+    'paragraph': (0,),
     'text': (0,),
     'caption': (0,),
-    'paragraph': (0,),
+    'title': (0,),
 }
 
 env_denylist = [
