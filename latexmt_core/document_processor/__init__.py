@@ -4,6 +4,7 @@ import sys
 from latexmt_core.context_logger import ContextLogger, logger_from_kwargs
 import latexmt_core.glossary.align as gloss_align
 import latexmt_core.glossary.srcrepl as gloss_srcrepl
+from latexmt_core.parsing.to_text import is_space_or_masked
 from latexmt_core.parsing.unpack import latex_to_nodelist, get_textitems
 from latexmt_core.parsing.repack import nodelist_to_latex, replace_nodes
 from latexmt_core.parsing.parsplit import parsplit
@@ -88,21 +89,24 @@ class DocumentTranslator:
             = [initial_whitespace]
 
         for in_text in paragraphs:
-            if self.glossary_method == 'srcrepl':
-                in_text = gloss_srcrepl.apply(in_text, self.glossary)
-            self.__translator.translate(
-                in_text, self.glossary if self.glossary_method == 'builtin' else {})
-            self.__aligner.align(in_text, self.__translator.output_text)
-
-            if self.glossary_method == 'align':
-                out_text = words_spans_to_markupstr(
-                    *gloss_align.apply(self.__aligner, self.glossary),
-                )
+            if is_space_or_masked(in_text):
+                translated_flatlist.extend(in_text.to_markup_list())
             else:
-                out_text = self.__aligner.target_text
+                if self.glossary_method == 'srcrepl':
+                    in_text = gloss_srcrepl.apply(in_text, self.glossary)
+                self.__translator.translate(
+                    in_text, self.glossary if self.glossary_method == 'builtin' else {})
+                self.__aligner.align(in_text, self.__translator.output_text)
 
-            out_text_flatlist = out_text.to_markup_list()
-            translated_flatlist.extend(chain(out_text_flatlist, ('\n\n',)))
+                if self.glossary_method == 'align':
+                    out_text = words_spans_to_markupstr(
+                        *gloss_align.apply(self.__aligner, self.glossary),
+                    )
+                else:
+                    out_text = self.__aligner.target_text
+
+                out_text_flatlist = out_text.to_markup_list()
+                translated_flatlist.extend(chain(out_text_flatlist, ('\n\n',)))
         # for in_text
 
         translated_flatlist[-1] = final_whitespace

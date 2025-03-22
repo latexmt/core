@@ -24,6 +24,7 @@ env_denylist = [
     'tikzpicture',
     'tabular',
     'boxproof',
+    'figure',
 ]
 
 math_environs = [

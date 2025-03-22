@@ -135,7 +135,7 @@ class MarkupString:
         if len(self) == 0:
             return self
         index = 0
-        while self.__string[index].isspace():
+        while index < len(self) and self.__string[index].isspace():
             index += 1
 
         return self[index:]
@@ -144,7 +144,7 @@ class MarkupString:
         if len(self) == 0:
             return self
         index = len(self.__string)
-        while self.__string[index-1].isspace():
+        while index > 1 and self.__string[index-1].isspace():
             index -= 1
 
         return self[:index]
