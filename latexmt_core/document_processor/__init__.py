@@ -111,7 +111,7 @@ class DocumentTranslator:
 
         translated_flatlist[-1] = final_whitespace
 
-        # whie tmp_idx
+        # while tmp_idx
         # concatenate adjacent strings in `translated_flatlist`
         tmp_idx = 0
         while tmp_idx < len(translated_flatlist) - 1:
@@ -121,7 +121,7 @@ class DocumentTranslator:
                 translated_flatlist.pop(tmp_idx+1)
             else:
                 tmp_idx += 1
-        # whie tmp_idx
+        # while tmp_idx
         del tmp_idx
 
         return textitem_flatlist_to_nodelist(textitem, translated_flatlist)
