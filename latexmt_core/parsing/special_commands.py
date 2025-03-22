@@ -5,6 +5,7 @@ separator_macros = [
 
 nontext_macros = [
     'ref',
+    'autoref',
     'url',
     'cite',
 ]
