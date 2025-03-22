@@ -22,16 +22,26 @@ def get_latex_context(out_included_files: list[str]):
         macros=[MacroSpec('enquote', '{'), MacroSpec('caption', '{')]
     )
 
-    newenvironment_parser = CharsArgumentParser('{')
+    plaintext_req = CharsArgumentParser('{')
     latex_context.add_context_category(
-        'newenvironment',
+        'new-commands',
         prepend=True,
         macros=[
             MacroSpec('newenvironment', arguments_spec_list=[
                 '*', LatexArgumentSpec('{', argname='env_name'), '[', '[',
-                LatexArgumentSpec(newenvironment_parser, argname='env_begin'),
-                LatexArgumentSpec(newenvironment_parser, argname='env_end'),
-            ])
+                LatexArgumentSpec(plaintext_req, argname='env_begin'),
+                LatexArgumentSpec(plaintext_req, argname='env_end'),
+            ]),
+            MacroSpec('newcommand', arguments_spec_list=[
+                LatexArgumentSpec('{', argname='cmd_name'),
+                LatexArgumentSpec('[', argname='cmd_argcount'),
+                LatexArgumentSpec(plaintext_req, argname='cmd_content'),
+            ]),
+            # TODO: store and later recognise let aliases
+            MacroSpec('let', arguments_spec_list=[
+                LatexArgumentSpec('{', argname='let_name'),
+                LatexArgumentSpec(plaintext_req, argname='let_content'),
+            ]),
         ]
     )
 
