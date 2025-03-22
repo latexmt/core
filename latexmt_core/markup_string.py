@@ -186,6 +186,21 @@ class MarkupString:
 
         return ret
 
+    def upper(self) -> Self:
+        ret = deepcopy(self)
+        ret.__string = ret.__string.upper()
+        return ret
+
+    def lower(self) -> Self:
+        ret = deepcopy(self)
+        ret.__string = ret.__string.lower()
+        return ret
+
+    def title(self) -> Self:
+        ret = deepcopy(self)
+        ret.__string = ret.__string.title()
+        return ret
+
     def __markups_at(self, pos: int) -> Iterable[Markup]:
         return filter(lambda markup: markup.start == pos, self.__markups)
 
