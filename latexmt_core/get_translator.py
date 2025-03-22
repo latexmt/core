@@ -8,9 +8,11 @@ from latexmt_core.alignment import Aligner
 def get_translator_aligner(src_lang: str, tgt_lang: str,
                            trans_type: str, align_type: str | None,
                            **kwargs) -> tuple[Translator, Aligner]:
-    align_type = (trans_type
-                  if align_type == 'auto' and trans_type in ['null', 'opus']
-                  else 'awesome')
+    align_type = ((trans_type
+                   if trans_type in ['null', 'opus']
+                   else 'awesome')
+                  if align_type == 'auto'
+                  else align_type)
 
     logger = logger_from_kwargs(**kwargs)
     kwargs.pop('logger', None)
