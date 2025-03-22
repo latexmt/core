@@ -1,6 +1,7 @@
 separator_macros = [
     'section',
     'item',
+    'paragraph'
 ]
 
 nontext_macros = [
@@ -14,6 +15,7 @@ translate_macro_args = {
     'section': (2,),
     'text': (0,),
     'caption': (0,),
+    'paragraph': (0,),
 }
 
 env_denylist = [

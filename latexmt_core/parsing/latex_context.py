@@ -17,9 +17,13 @@ def get_latex_context(out_included_files: list[str]):
 
     # FIXME: this should probably not be done here
     latex_context.add_context_category(
-        'package-commands',
+        'extra-commands',
         prepend=True,
-        macros=[MacroSpec('enquote', '{'), MacroSpec('caption', '{')]
+        macros=[
+            MacroSpec('enquote', '{'),
+            MacroSpec('caption', '{'),
+            MacroSpec('paragraph', '{'),
+        ]
     )
 
     plaintext_req = CharsArgumentParser('{')
