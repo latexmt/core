@@ -1,5 +1,5 @@
 import logging
-from pylatexenc.latexwalker import LatexWalker
+from pylatexenc.latexwalker import LatexWalker, get_default_latex_context_db
 from pylatexenc.latexnodes import ParsingStateDeltaEnterMathMode
 from pylatexenc.latexnodes.parsers import LatexGeneralNodesParser
 from typing import cast
@@ -28,7 +28,7 @@ def last_node_has_parbreak(nodelist: list[lw.LatexNode]) -> bool:
     return len(nodelist) > 0 and isinstance(nodelist[-1], lw.LatexCharsNode) and nodelist[-1].chars.endswith('\n\n')
 
 
-def get_textitems(nodelist: list[lw.LatexNode]) -> list[TextItem]:
+def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = get_default_latex_context_db()) -> list[TextItem]:
     logger = logging.getLogger(__name__)
 
     # list of extracted TextItems to be returned
@@ -67,6 +67,7 @@ def get_textitems(nodelist: list[lw.LatexNode]) -> list[TextItem]:
 
         textitem_nodelist.clear()
 
+    previous_node: lw.LatexNode | None = None
     for node in nodelist:
         assert node.parsing_state is not None
         if not node.parsing_state.in_math_mode:
@@ -80,7 +81,15 @@ def get_textitems(nodelist: list[lw.LatexNode]) -> list[TextItem]:
                            for node in node.nodelist):
                         textitem_nodelist.append(node)
                     else:
-                        nested_nodes.append(node)
+                        parse_group_arguments = True
+
+                        # do not recurse into arguments of unknown macros
+                        if isinstance(previous_node, lw.LatexMacroNode):
+                            if latex_context.get_macro_spec(previous_node.macroname) == latex_context.unknown_macro_spec:
+                                parse_group_arguments = False
+
+                        if parse_group_arguments:
+                            nested_nodes.append(node)
 
                 # special whitespace, newlines, etc.
                 # may want to do something with this later (e.g. in `parsplit`)
@@ -138,6 +147,7 @@ def get_textitems(nodelist: list[lw.LatexNode]) -> list[TextItem]:
                 case lw.LatexCommentNode():
                     finish_textitem()
             # match node
+            previous_node = node
 
         else:
             if isinstance(node, lw.LatexMacroNode) and node.macroname == 'text':
@@ -149,7 +159,7 @@ def get_textitems(nodelist: list[lw.LatexNode]) -> list[TextItem]:
         nested_nodelist = n.nodelist
         if isinstance(nested_nodelist, lw.LatexNodeList):
             nested_nodelist = nested_nodelist.nodelist
-        textitems.extend(get_textitems(nested_nodelist))
+        textitems.extend(get_textitems(nested_nodelist, latex_context))
 
     return textitems
 

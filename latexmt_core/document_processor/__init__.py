@@ -151,9 +151,9 @@ class DocumentTranslator:
         self.__logger.debug('Parsing LaTeX')
 
         out_included_files = list[str]()
-        nodelist = latex_to_nodelist(
-            input_text, latex_context=get_latex_context(out_included_files))
-        textitems = get_textitems(nodelist)
+        latex_context = get_latex_context(out_included_files)
+        nodelist = latex_to_nodelist(input_text, latex_context)
+        textitems = get_textitems(nodelist, latex_context)
 
         for index, textitem in enumerate(textitems):
             with self.__logger.frame({'textitem_index': index}):
