@@ -67,36 +67,41 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
 
         textitem_nodelist.clear()
 
-    previous_node: lw.LatexNode | None = None
+    previous_macro: lw.LatexNode | None = None
     for node in nodelist:
         assert node.parsing_state is not None
         if not node.parsing_state.in_math_mode:
             match node:
                 case lw.LatexCharsNode():
+                    previous_macro = None
                     textitem_nodelist.append(node)
 
                 case lw.LatexGroupNode():
-                    # treat group nodes containing only chars nodes as markup nodes
-                    if all(isinstance(node, lw.LatexCharsNode | lw.LatexGroupNode)
-                           for node in node.nodelist):
+                    # do not recurse into arguments of unknown macros
+                    is_probably_argument = (
+                        previous_macro is not None and
+                        (latex_context.get_macro_spec(previous_macro.macroname)
+                         == latex_context.unknown_macro_spec)
+                    )
+
+                    if not is_probably_argument:
+                        previous_macro = None
+
+                    # treat char-only group nodes and unknown macro arguments as part of the text
+                    if is_probably_argument or all(isinstance(node, lw.LatexCharsNode | lw.LatexGroupNode)
+                                                   for node in node.nodelist):
                         textitem_nodelist.append(node)
                     else:
-                        parse_group_arguments = True
-
-                        # do not recurse into arguments of unknown macros
-                        if isinstance(previous_node, lw.LatexMacroNode):
-                            if latex_context.get_macro_spec(previous_node.macroname) == latex_context.unknown_macro_spec:
-                                parse_group_arguments = False
-
-                        if parse_group_arguments:
-                            nested_nodes.append(node)
+                        nested_nodes.append(node)
 
                 # special whitespace, newlines, etc.
                 # may want to do something with this later (e.g. in `parsplit`)
                 case lw.LatexSpecialsNode():
+                    previous_macro = None
                     textitem_nodelist.append(node)
 
                 case lw.LatexMathNode():
+                    previous_macro = None
                     # find nested `\text` nodes
                     nested_nodes.append(node)
 
@@ -108,6 +113,7 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
                         textitem_nodelist.append(node)
 
                 case lw.LatexMacroNode():
+                    previous_macro = node
                     # translate section titles, etc.
                     if node.macroname in translate_macro_args:
                         for arg_index in translate_macro_args[node.macroname]:
@@ -124,6 +130,7 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
                         textitem_nodelist.append(node)
 
                 case lw.LatexEnvironmentNode():
+                    previous_macro = None
                     # is this a math environment?
                     if isinstance(node.spec.body_parsing_state_delta, ParsingStateDeltaEnterMathMode):
                         # find nested `\text` nodes
@@ -147,7 +154,6 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
                 case lw.LatexCommentNode():
                     finish_textitem()
             # match node
-            previous_node = node
 
         else:
             if isinstance(node, lw.LatexMacroNode) and node.macroname == 'text':

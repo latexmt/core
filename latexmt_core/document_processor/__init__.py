@@ -91,7 +91,7 @@ class DocumentTranslator:
         for in_text in paragraphs:
             try:
                 if is_space_or_masked(in_text):
-                    translated_flatlist.extend(in_text.to_markup_list())
+                    out_text_flatlist = in_text.to_markup_list()
                 else:
                     if self.glossary_method == 'srcrepl':
                         in_text = gloss_srcrepl.apply(in_text, self.glossary)
@@ -108,8 +108,6 @@ class DocumentTranslator:
                         out_text = self.__aligner.target_text
 
                     out_text_flatlist = out_text.to_markup_list()
-                    translated_flatlist.extend(
-                        chain(out_text_flatlist, ('\n\n',)))
             except Exception as e:
                 self.__logger.warning('Translation of paragraph failed',
                                       extra={'error': e, 'in_text': in_text})
@@ -118,7 +116,10 @@ class DocumentTranslator:
                     f'\textbf{{NOTE}}: Translation of the following paragraph failed: {e}',
                     '\n\n'
                 ])
-                translated_flatlist.extend(in_text.to_markup_list())
+                out_text_flatlist = in_text.to_markup_list()
+
+            translated_flatlist.extend(
+                chain(out_text_flatlist, ('\n\n',)))
         # for in_text
 
         translated_flatlist[-1] = final_whitespace
