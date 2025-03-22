@@ -1,5 +1,6 @@
 separator_macros = [
     'section',
+    'subsection',
     'item',
     'paragraph'
 ]
@@ -13,6 +14,7 @@ nontext_macros = [
 
 translate_macro_args = {
     'section': (2,),
+    'subsection': (2,),
     'text': (0,),
     'caption': (0,),
     'paragraph': (0,),
