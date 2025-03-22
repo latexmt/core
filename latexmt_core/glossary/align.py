@@ -53,7 +53,7 @@ def apply(aligner: Aligner, glossary: dict[str, str]) -> tuple[Sequence[Alignmen
 
         for index, wordlist in enumerate(aligner.source_words[idx:idx+len(gloss_src_words)]
                                          for idx
-                                         in range(len(aligner.source_words)-len(gloss_src_words))):
+                                         in range(len(aligner.source_words))):
             # should we ignore the case here?
             if all(gloss_src_word.chars.lower() == word.chars.lower()
                     for gloss_src_word, word
