@@ -37,19 +37,18 @@ class CustomLatexContextDb(LatexContextDb):
 
         return db
 
-    def get_macro_spec(self, macroname):
+    def get_macro_spec(self, macroname, raise_if_not_found=False):
         '''
         copied from `pylatexenc.macrospec.LatexContextDb`, except an internal
         flag is set to reflect whether the last macro encountered is unknown
         '''
-        for cat in self.category_list:
-            # search categories in the given order
-            if macroname in self.d[cat]['macros']:
-                self.last_node_unknown = False
-                return self.d[cat]['macros'][macroname]
-
-        self.last_node_unknown = True
-        return self.unknown_macro_spec
+        try:
+            return self.lookup_chain_maps['macros'][macroname]
+        except KeyError:
+            self.last_node_unknown = True
+            if raise_if_not_found:
+                raise
+            return self.unknown_macro_spec
 
 
 class LatexNodes2MaskedText(LatexNodes2Text):
