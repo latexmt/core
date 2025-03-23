@@ -1,6 +1,7 @@
 from datetime import datetime
 from deepl import DeepLClient, GlossaryInfo
 import json
+import os
 
 from latexmt_core.context_logger import ContextLogger, logger_from_kwargs
 from latexmt_core.translation import Translator
@@ -9,6 +10,14 @@ from latexmt_core.translation import Translator
 from deepl import TextResult
 from typing import Any, Optional
 from latexmt_core.translation import StringType, TokenSequence
+
+
+def get_api_token():
+    try:
+        return os.environ['DEEPL_API_TOKEN']
+    except Exception:
+        raise ValueError(('DeepL API Token must be provided via the environment'
+                          'variable DEEPL_API_TOKEN'))
 
 
 class DeepLTranslator(Translator):
@@ -31,8 +40,6 @@ class DeepLTranslator(Translator):
         self.__logger.debug(
             "Initialising %s (%s -> %s)" % (self.__class__.__name__, src_lang, tgt_lang)
         )
-
-        from .api_token import get_api_token
 
         self.__deepl_client = DeepLClient(get_api_token())
         self.__cached_glossary = None

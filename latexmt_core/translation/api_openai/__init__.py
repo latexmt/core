@@ -1,5 +1,6 @@
 from datetime import datetime
 from openai import OpenAI
+import os
 
 from latexmt_core.context_logger import ContextLogger, logger_from_kwargs
 from latexmt_core.translation import Translator
@@ -7,6 +8,14 @@ from latexmt_core.translation import Translator
 # type imports
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 from latexmt_core.translation import StringType, TokenSequence
+
+
+def get_api_token():
+    try:
+        return os.environ['OPENAI_API_TOKEN']
+    except Exception:
+        raise ValueError(('OpenAI API Token must be provided via the environment'
+                          'variable OPENAI_API_TOKEN'))
 
 
 class OpenAITranslator(Translator):
@@ -33,7 +42,6 @@ class OpenAITranslator(Translator):
         self.__logger.debug('Initialising %s (%s -> %s) with model=%s, prompt=%s' %
                             (self.__class__.__name__, src_lang, tgt_lang, self.__model, self.__prompt))
 
-        from .api_token import get_api_token
         self.__openai_client = OpenAI(api_key=get_api_token())
 
     @property
