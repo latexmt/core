@@ -13,16 +13,14 @@ classifiers = [
 dependencies = [
   "numpy",
   "pylatexenc==3.0a30",
-]
-
-[project.optional-dependencies]
-opus = [
   "torch==2.6.0",
   "transformers[torch]",
   "tokenizers",
   "sentencepiece",
-  "sacremoses"
+  "sacremoses",
 ]
+
+[project.optional-dependencies]
 opus-huggingface = ["requests"]
 deepl = ["deepl"]
 openai = ["openai"]
