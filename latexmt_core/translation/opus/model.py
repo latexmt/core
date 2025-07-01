@@ -4,16 +4,12 @@ from typing import cast
 
 # type imports
 from typing import Optional
-from transformers.models.marian import MarianTokenizer, MarianMTModel
+from transformers import PreTrainedTokenizer, PreTrainedModel
 
-__srclang: Optional[str] = None
-__tgtlang: Optional[str] = None
-__model_base: Optional[str] = None
-__model: Optional[MarianMTModel] = None
-__tokenizer: Optional[MarianTokenizer] = None
+__loaded_models = dict[str, tuple[PreTrainedTokenizer, PreTrainedModel]]()
 
 
-def get_model_checkpoint(model_base: str = 'Helsinki-NLP/opus-mt-{src}-{tgt}') -> str:
+def get_model_checkpoint(source: str, target: str, model_base: str = 'Helsinki-NLP/opus-mt-{src}-{tgt}') -> str:
     '''
     `model_base` may be a formatable string (containing `{src}/{tgt}` as
     placeholders for source and target languages, respectively)
@@ -21,32 +17,35 @@ def get_model_checkpoint(model_base: str = 'Helsinki-NLP/opus-mt-{src}-{tgt}') -
     see the default value for reference
     '''
 
-    return model_base.format(src=__srclang, tgt=__tgtlang)
+    return model_base.format(src=source, tgt=target)
 
 
-def update_model(source: str, target: str, model_base: Optional[str] = None):
-    global __srclang, __tgtlang, __model_base, __model, __tokenizer
+def update_model(model_checkpoint: str):
+    global __loaded_models
 
-    if source != __srclang or target != __tgtlang or model_base != __model_base:
-        __srclang, __tgtlang, __model_base = source, target, model_base
-        model_checkpoint = get_model_checkpoint(model_base) \
-            if model_base is not None \
-            else get_model_checkpoint()
-        __tokenizer = cast(MarianTokenizer,
-                           AutoTokenizer.from_pretrained(model_checkpoint))
-        __model = cast(MarianMTModel,
-                       AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint))
-        if torch.cuda.is_available():
-            __model = __model.to('cuda')  # type: ignore
+    tokenizer = cast(PreTrainedTokenizer,
+                     AutoTokenizer.from_pretrained(model_checkpoint))
+    model = cast(PreTrainedModel,
+                 AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint))
+    if torch.cuda.is_available():
+        __model = __model.to('cuda')  # type: ignore
+
+    __loaded_models[model_checkpoint] = (tokenizer, model)
 
 
-def get_tokenizer(source: str = 'de', target: str = 'en', model_base: Optional[str] = None) -> MarianTokenizer:
-    update_model(source, target, model_base)
-    assert __tokenizer is not None
-    return __tokenizer
+def get_tokenizer(source: str = 'de', target: str = 'en', model_base: Optional[str] = None) -> PreTrainedTokenizer:
+    model_checkpoint = get_model_checkpoint(source, target, model_base) \
+        if model_base is not None \
+        else get_model_checkpoint(source, target)
+
+    update_model(model_checkpoint)
+    return __loaded_models[model_checkpoint][0]
 
 
-def get_model(source: str = 'de', target: str = 'en', model_base: Optional[str] = None) -> MarianMTModel:
-    update_model(source, target, model_base)
-    assert __model is not None
-    return __model
+def get_model(source: str = 'de', target: str = 'en', model_base: Optional[str] = None) -> PreTrainedModel:
+    model_checkpoint = get_model_checkpoint(source, target, model_base) \
+        if model_base is not None \
+        else get_model_checkpoint(source, target)
+
+    update_model(model_checkpoint)
+    return __loaded_models[model_checkpoint][1]
