@@ -18,7 +18,8 @@ def get_translator_aligner(src_lang: str, tgt_lang: str,
     logger = logger_from_kwargs(**kwargs)
     kwargs.pop('logger', None)
 
-    logger.info(f'Initialising translator...', extra=kwargs | {'trans_type': trans_type, 'src_lang': src_lang, 'tgt_lang': tgt_lang})
+    logger.info(f'Initialising translator...', extra=kwargs | {
+                'trans_type': trans_type, 'src_lang': src_lang, 'tgt_lang': tgt_lang})
 
     match trans_type:
         case 'null':
