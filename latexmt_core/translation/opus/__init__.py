@@ -10,6 +10,7 @@ from .model import get_model, get_tokenizer
 
 # type imports
 from typing import Any, Optional, Sequence
+from transformers import PreTrainedTokenizer, PreTrainedModel
 from transformers.models.marian import MarianTokenizer, MarianMTModel
 from latexmt_core.alignment import Aligner, AlignmentWord, TokenizedAlignmentWord, words_spans_to_markupstr
 from latexmt_core.translation import Translator, StringType, TokenSequence
@@ -19,14 +20,23 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
     __input: BatchEncoding
     __output: Any
 
+    __input_prefix: str = ''
+    @property
+    def input_prefix(self) -> str:
+        return self.__input_prefix
+    @input_prefix.setter
+    def input_prefix(self, value):
+        if value != '':
+            self.__input_prefix = value + '\n'
+
     __source_markup_spans: Sequence[Markup]
     __target_markup_spans: Sequence[Markup]
 
     __attentions: torch.Tensor
     __word_alignments: torch.Tensor
 
-    __tokenizer: MarianTokenizer
-    __model: MarianMTModel
+    __tokenizer: PreTrainedTokenizer
+    __model: PreTrainedModel
 
     __logger: ContextLogger
 
@@ -34,14 +44,23 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         '''
         optional parameters:
         - `logger`: an instance of `ContextLogger`
-        - `model_base`: a format string used to derive the model checkpoint;
-          see `model.py`
+        - `opus_model_base`: a format string used to derive the model checkpoint;
+          default: `Helsinki-NLP/opus-mt-de-en`;
+          see also `model.py`
+        - `opus_input_prefix`: a prefix to be added to the input, for multilingual translation models;
+          e.g. `>>ita<<`;
+          implicitly includes a newline
         '''
 
         super().__init__(src_lang, tgt_lang)
 
         # optionally set up alternative model
         model_base: Optional[str] = kwargs.pop('opus_model_base', None)
+
+        # optionally set up input prefix
+        self.input_prefix = kwargs.pop('opus_input_prefix', '')
+        if self.input_prefix != '':
+            self.input_prefix += '\n'
 
         self.__logger = logger_from_kwargs(**kwargs)
         self.__logger.debug('Initialising %s (%s -> %s) with model_base=%s' %
@@ -99,7 +118,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         self.__logger.debug('Tokenising input text')
 
         self.__source_words, self.__source_markup_spans, self.__in_token_to_word_idx, input_tokens = \
-            self.__tokenize_words(text)
+            self.__tokenize_words(self.input_prefix + text)
 
         self.__input = BatchEncoding(
             {'input_ids': [input_tokens],
@@ -153,6 +172,10 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         self.__attentions = attention_matrix
 
     @property
+    def is_marian(self) -> bool:
+        return isinstance(self.__model, MarianMTModel)
+
+    @property
     def __input_tokens(self) -> torch.Tensor:
         return cast(torch.Tensor, self.__input['input_ids'])\
             .type(torch.int32)[0, :-1]
@@ -181,7 +204,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
     def translate(self, input_text: StringType, glossary: dict[str, str] = {}):
         with self.__logger.frame({'input_text': input_text}):
             self.__logger.debug('Translating input text')
-            self.__tokenize(input_text)
+            self.__tokenize(self.input_prefix + input_text)
         self.__input = self.__input.to(self.__model.device)
         self.__set_output()
 
@@ -214,6 +237,10 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         return self.__word_alignments.numpy()
 
     def align(self, source_text: StringType, target_text: StringType):
+        if not self.is_marian:
+            self.__logger.warning(
+                'Cannot guarantee useful alignments with non-MarianMT models!')
+
         self.__set_attentions()
 
         self.__target_words, _, self.__out_token_to_word_idx, _ = \
@@ -225,7 +252,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
             size=(len(self.__target_words), len(self.__source_words)),
             dtype=torch.int8)
         for o_tok, i_tok in torch.nonzero(self.__attentions[:-2, :-1] >= threshold):
-            i_tok, o_tok = i_tok.item(), o_tok.item()
+            i_tok, o_tok = int(i_tok.item()), int(o_tok.item())
             # no word corresponds to this token in either the input or the output
             if i_tok not in self.__in_token_to_word_idx \
                     or o_tok not in self.__out_token_to_word_idx:

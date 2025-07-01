@@ -8,6 +8,7 @@ from latexmt_core.alignment import Aligner
 def get_translator_aligner(src_lang: str, tgt_lang: str,
                            trans_type: str, align_type: str | None,
                            **kwargs) -> tuple[Translator, Aligner]:
+    align_auto = (align_type == 'auto')
     align_type = ((trans_type
                    if trans_type in ['null', 'opus']
                    else 'awesome')
@@ -17,12 +18,7 @@ def get_translator_aligner(src_lang: str, tgt_lang: str,
     logger = logger_from_kwargs(**kwargs)
     kwargs.pop('logger', None)
 
-    kwargs.pop('src_lang', None)
-    kwargs.pop('tgt_lang', None)
-    kwargs.pop('trans_type', None)
-    kwargs.pop('align_type', None)
-
-    logger.info(f'Initialising translator for {src_lang}-{tgt_lang}...')  # nopep8
+    logger.info(f'Initialising translator...', extra=kwargs | {'trans_type': trans_type, 'src_lang': src_lang, 'tgt_lang': tgt_lang})
 
     match trans_type:
         case 'null':
@@ -48,7 +44,8 @@ def get_translator_aligner(src_lang: str, tgt_lang: str,
         case _:
             raise NotImplementedError(f'Invalid translator: {trans_type}')  # nopep8
 
-    logger.info(f'Initialising aligner for {src_lang}-{tgt_lang}...')
+    logger.info(f'Initialising aligner...',
+                extra=kwargs | {'align_type': align_type})
     match align_type:
         case 'null':
             if trans_type == 'null':
@@ -57,16 +54,32 @@ def get_translator_aligner(src_lang: str, tgt_lang: str,
             else:
                 raise ValueError(
                     'Null aligner may only be used with Null translator')
+
         case 'opus':
             if trans_type == 'opus':
                 from latexmt_core.translation.opus import OpusTransformersTranslatorAligner
-                aligner = cast(OpusTransformersTranslatorAligner, translator)
+                translator = cast(
+                    OpusTransformersTranslatorAligner, translator)
+
+                if translator.is_marian:
+                    aligner = translator
+                elif align_auto:
+                    logger.info(
+                        'Non-MarianMT translation model; falling back to awesome-align')
+                    from latexmt_core.alignment.awesome_align import AwesomeAligner
+                    aligner = AwesomeAligner(src_lang, tgt_lang, **kwargs)
+                else:
+                    raise ValueError(
+                        'Opus aligner may only be used with MarianMT model')
+
             else:
                 raise ValueError(
                     'Opus aligner may only be used with Opus translator')
+
         case 'awesome':
             from latexmt_core.alignment.awesome_align import AwesomeAligner
             aligner = AwesomeAligner(src_lang, tgt_lang, **kwargs)
+
         case _:
             raise NotImplementedError(f'Invalid aligner: {align_type}')  # nopep8
 
