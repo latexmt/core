@@ -13,8 +13,8 @@ from .special_commands import nontext_macros
 import pylatexenc.latexnodes.nodes as lw
 
 
-mask_format_str = '#{idx}_'
-mask_regex = '#(\\d+)_'
+mask_format_str = '~{idx}_'
+mask_regex = '~(\\d+)_'
 
 
 class CustomLatexContextDb(LatexContextDb):
