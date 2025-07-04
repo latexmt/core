@@ -26,6 +26,8 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         return self.__input_prefix
     @input_prefix.setter
     def input_prefix(self, value):
+        if value is None:
+            value = ''
         if value != '':
             self.__input_prefix = value + '\n'
 
