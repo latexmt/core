@@ -62,7 +62,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         # optionally set up input prefix
         self.input_prefix = kwargs.pop('opus_input_prefix', '')
         if self.input_prefix != '':
-            self.input_prefix += '\n'
+            self.input_prefix += ' '
 
         self.__logger = logger_from_kwargs(**kwargs)
         self.__logger.debug('Initialising %s (%s -> %s) with model_base=%s' %
