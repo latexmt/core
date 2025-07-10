@@ -29,7 +29,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         if value is None:
             value = ''
         if value != '':
-            self.__input_prefix = value + '\n'
+            self.__input_prefix = value + ' '
 
     __source_markup_spans: Sequence[Markup]
     __target_markup_spans: Sequence[Markup]
@@ -62,7 +62,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         # optionally set up input prefix
         self.input_prefix = kwargs.pop('opus_input_prefix', '')
         if self.input_prefix != '':
-            self.input_prefix += '\n'
+            self.input_prefix += ' '
 
         self.__logger = logger_from_kwargs(**kwargs)
         self.__logger.debug('Initialising %s (%s -> %s) with model_base=%s' %
@@ -120,7 +120,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         self.__logger.debug('Tokenising input text')
 
         self.__source_words, self.__source_markup_spans, self.__in_token_to_word_idx, input_tokens = \
-            self.__tokenize_words(self.input_prefix + text)
+            self.__tokenize_words(text)
 
         self.__input = BatchEncoding(
             {'input_ids': [input_tokens],
