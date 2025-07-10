@@ -120,7 +120,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         self.__logger.debug('Tokenising input text')
 
         self.__source_words, self.__source_markup_spans, self.__in_token_to_word_idx, input_tokens = \
-            self.__tokenize_words(self.input_prefix + text)
+            self.__tokenize_words(text)
 
         self.__input = BatchEncoding(
             {'input_ids': [input_tokens],
