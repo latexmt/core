@@ -28,7 +28,7 @@ def update_model(model_checkpoint: str):
     model = cast(PreTrainedModel,
                  AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint))
     if torch.cuda.is_available():
-        __model = __model.to('cuda')  # type: ignore
+        model = model.to('cuda')  # type: ignore
 
     __loaded_models[model_checkpoint] = (tokenizer, model)
 
