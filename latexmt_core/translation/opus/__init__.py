@@ -29,7 +29,7 @@ class OpusTransformersTranslatorAligner(Translator, Aligner):
         if value is None:
             value = ''
         if value != '':
-            self.__input_prefix = value + '\n'
+            self.__input_prefix = value + ' '
 
     __source_markup_spans: Sequence[Markup]
     __target_markup_spans: Sequence[Markup]
