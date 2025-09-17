@@ -3,7 +3,7 @@ from pylatexenc.macrospec import ParsedMacroArgs
 import re
 from typing import cast
 
-from latexmt_core.parsing.to_text import mask_regex, mask_format_str
+from latexmt_core.parsing.to_text import get_mask_regex, get_mask_format_str
 
 # type imports
 from pathlib import Path
@@ -21,7 +21,7 @@ def ensure_dir(dir: Path):
 
 def textitem_flatlist_to_nodelist(
     textitem: TextItem,
-    translated_flatlist: list[str | MarkupStartMarker | MarkupEndMarker]
+    translated_flatlist: list[str | MarkupStartMarker | MarkupEndMarker],
 ) -> list[lw.LatexNode]:
     translated_nodelist = list[lw.LatexNode]()
     translated_pos: int = cast(int, textitem.nodelist[0].pos)
@@ -31,7 +31,7 @@ def textitem_flatlist_to_nodelist(
         match translated_elem:
             # re-insert masked nodes
             case str():
-                elem_split = re.split(mask_regex, translated_elem)
+                elem_split = re.split(get_mask_regex(textitem.mask_str), translated_elem)
                 for text, mask_idx in zip(elem_split[::2], chain(map(int, elem_split[1::2]), [None])):
                     # special case for percent signs
                     # TODO: other special cases?
@@ -52,9 +52,9 @@ def textitem_flatlist_to_nodelist(
                             mask_node.pos = translated_pos
                         except Exception as e:
                             # TODO: emit warning
-                            mask_str = mask_format_str.format(idx=mask_idx)
+                            masked_str = get_mask_format_str(mask_str).format(idx=mask_idx)
                             mask_node = lw.LatexCharsNode(
-                                mask_str, len=len(mask_str), pos=translated_pos)
+                                masked_str, len=len(masked_str), pos=translated_pos)
 
                         nodelist_stack[-1].append(mask_node)
                         translated_pos += cast(int, mask_node.len)

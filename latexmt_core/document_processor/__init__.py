@@ -4,7 +4,7 @@ import sys
 from latexmt_core.context_logger import ContextLogger, logger_from_kwargs
 import latexmt_core.glossary.align as gloss_align
 import latexmt_core.glossary.srcrepl as gloss_srcrepl
-from latexmt_core.parsing.to_text import is_space_or_masked
+from latexmt_core.parsing.to_text import is_space_or_masked, mask_str_default
 from latexmt_core.parsing.unpack import latex_to_nodelist, get_textitems
 from latexmt_core.parsing.repack import nodelist_to_latex, replace_nodes
 from latexmt_core.parsing.parsplit import parsplit
@@ -42,6 +42,8 @@ class DocumentTranslator:
     glossary: dict[str, str]
     glossary_method: Literal['builtin'] | GlossaryMethod
 
+    mask_str: str
+
     def clear_processed(self):
         '''
         clear the list of processed files
@@ -60,11 +62,12 @@ class DocumentTranslator:
         glossary: dict[str, str] = {},
         glossary_method: Literal['auto'] | GlossaryMethod = 'auto',
         glossary_fallback: GlossaryMethod = 'align',
+        mask_str: str = mask_str_default,
         **kwargs
     ):
         self.__logger = logger_from_kwargs(**kwargs)
         self.__logger.debug('Initialising %s' % (self.__class__.__name__, ),
-                            extra={'translator': translator, 'aligner': aligner})
+                            extra={'translator': translator, 'aligner': aligner, 'mask_str': mask_str})
 
         self.__translator = translator
         self.__aligner = aligner
@@ -74,6 +77,7 @@ class DocumentTranslator:
         self.glossary = glossary
         self.glossary_method = (('builtin' if self.__translator.supports_glossary else glossary_fallback)
                                 if glossary_method == 'auto' else glossary_method)
+        self.mask_str = mask_str
 
     def __get_input_path(self, filename: Path) -> Path:
         return self.__root_document_dir.joinpath(filename)
@@ -90,7 +94,7 @@ class DocumentTranslator:
 
         for in_text in paragraphs:
             try:
-                if is_space_or_masked(in_text):
+                if is_space_or_masked(in_text, textitem.mask_str):
                     out_text_flatlist = in_text.to_markup_list()
                 else:
                     if self.glossary_method == 'srcrepl':
@@ -154,7 +158,7 @@ class DocumentTranslator:
         out_included_files = list[str]()
         latex_context = get_latex_context(out_included_files)
         nodelist = latex_to_nodelist(input_text, latex_context)
-        textitems = get_textitems(nodelist, latex_context)
+        textitems = get_textitems(nodelist, latex_context, self.mask_str)
 
         for index, textitem in enumerate(textitems):
             with self.__logger.frame({'textitem_index': index}):
@@ -169,7 +173,7 @@ class DocumentTranslator:
                                     extra=({'original': original, 'translated': translated}))
 
                 # delete original nodes and insert newly created nodes holding translated text
-                self.__logger.debug(f'Reinserting modified nodelist')
+                self.__logger.debug('Reinserting modified nodelist')
                 replace_nodes(textitem.parent_nodelist,
                               textitem.nodelist, translated_nodelist)
         # for index, textitem

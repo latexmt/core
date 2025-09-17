@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from typing import cast
 
-from .to_text import mask_format_str
-
 # type imports
 import pylatexenc.latexnodes.nodes as lw
 from latexmt_core.markup_string import MarkupString
+from latexmt_core.parsing.to_text import mask_str_default, get_mask_format_str
 from typing import Iterable
 
 
@@ -16,12 +15,13 @@ class TextItem:
     nodelist: list[lw.LatexNode]
     masked_nodes: list[lw.LatexNode]
     parent_nodelist: list[lw.LatexNode]
+    mask_str: str = mask_str_default
 
     def unmask_text(self, text: str) -> str:
         return_text = text
         for mask_idx, mask_node in enumerate(self.masked_nodes):
             mask_idx += 1
-            return_text = return_text.replace(mask_format_str.format(
+            return_text = return_text.replace(get_mask_format_str(self.mask_str).format(
                 idx=mask_idx), mask_node.latex_verbatim())
 
         return return_text
