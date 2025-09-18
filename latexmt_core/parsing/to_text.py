@@ -203,19 +203,16 @@ custom_ctxdb.set_unknown_environment_spec(
 custom_ctxdb.add_context_category(
     'custom',
     prepend=True,
-    macros=[
-        MacroTextSpec('enquote', simplify_repl='%s'),
-        MacroTextSpec('footnote', simplify_repl='%s'),
-    ])
+    macros=[MacroTextSpec(m, simplify_repl='%s') for m in ['enquote', 'footnote']],
+)
 custom_ctxdb.add_context_category(
     'masked',
     prepend=True,
     macros=[
-        MacroTextSpec(
-            'cite', simplify_repl=LatexNodes2MaskedText.mask_nontext_node),
-        MacroTextSpec(
-            'input', simplify_repl=LatexNodes2MaskedText.mask_nontext_node)
-    ])
+        MacroTextSpec(m, simplify_repl=LatexNodes2MaskedText.mask_nontext_node)
+        for m in ['cite', 'citep', 'citet', 'citeauthor', 'citeyear', 'input']
+    ],
+)
 
 
 def nodelist_to_markupstr(nodelist: list[lw.LatexNode], mask_str: str = mask_str_default) -> tuple[MarkupString, list[lw.LatexNode]]:

@@ -11,6 +11,10 @@ nontext_macros = [
     'autoref',
     'url',
     'cite',
+    'citep',
+    'citet',
+    'citeauthor',
+    'citeyear',
     'maketitle',
     'includegraphics',
 ]
