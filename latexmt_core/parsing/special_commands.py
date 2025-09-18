@@ -12,6 +12,7 @@ nontext_macros = [
     'url',
     'cite',
     'maketitle',
+    'includegraphics',
 ]
 
 translate_macro_args = {
