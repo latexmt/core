@@ -1,8 +1,8 @@
 [project]
 name = "latexmt-core"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
-  { name="Calvin Hoy", email="calvin.hoy@student.uibk.ac.at" },
+  { name="Calvin Hoy", email="calvin.hoy@screee.ee" },
 ]
 description = "Core functionality for LaTeXMT"
 requires-python = ">=3.10"
@@ -26,5 +26,5 @@ deepl = ["deepl"]
 openai = ["openai"]
 
 [project.urls]
-Homepage = "https://git.uibk.ac.at/csaz9385/latexmt-core"
-Issues = "https://git.uibk.ac.at/csaz9385/latexmt-core/issues"
+Homepage = "https://github.com/latexmt/core"
+Issues = "https://github.com/latexmt/core/issues"
