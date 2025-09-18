@@ -1,4 +1,5 @@
 from itertools import chain
+import os
 import sys
 
 from latexmt_core.context_logger import ContextLogger, logger_from_kwargs
@@ -182,8 +183,9 @@ class DocumentTranslator:
 
         if self.__recurse_input:
             for new_in_filename in out_included_files:
-                if not new_in_filename.endswith('.tex'):
-                    new_in_filename += '.tex'
+                if not Path(new_in_filename).exists:
+                    if not new_in_filename.endswith('.tex'):
+                        new_in_filename += '.tex'
 
                 new_in_path = Path(new_in_filename)
                 if new_in_path not in self.__input_queue:
