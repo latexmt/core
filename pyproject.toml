@@ -1,6 +1,6 @@
 [project]
 name = "latexmt-core"
-version = "1.0.2"
+version = "1.0.3"
 authors = [
   { name="Calvin Hoy", email="calvin.hoy@screee.ee" },
 ]
