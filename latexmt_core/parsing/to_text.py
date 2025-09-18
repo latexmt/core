@@ -204,7 +204,8 @@ custom_ctxdb.add_context_category(
     'custom',
     prepend=True,
     macros=[
-        MacroTextSpec('enquote', simplify_repl='%s')
+        MacroTextSpec('enquote', simplify_repl='%s'),
+        MacroTextSpec('footnote', simplify_repl='%s'),
     ])
 custom_ctxdb.add_context_category(
     'masked',
