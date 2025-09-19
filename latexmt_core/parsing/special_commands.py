@@ -26,7 +26,7 @@ translate_macro_args = {
     'paragraph': (0,),
     'text': (0,),
     'caption': (0,),
-    'title': (0,),
+    'title': (0,1,),
 }
 
 env_denylist = [
