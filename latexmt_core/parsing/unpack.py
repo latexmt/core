@@ -170,11 +170,11 @@ def get_textitems(
 
     finish_textitem()
 
-    for n in nested_nodes:
-        nested_nodelist = n.nodelist
-        if isinstance(nested_nodelist, lw.LatexNodeList):
-            nested_nodelist = nested_nodelist.nodelist
-        textitems.extend(get_textitems(nested_nodelist, latex_context, mask_str))
+    for n in (n for n in nested_nodes if hasattr(n, 'nodelist')):
+            nested_nodelist = n.nodelist
+            if isinstance(nested_nodelist, lw.LatexNodeList):
+                nested_nodelist = nested_nodelist.nodelist
+            textitems.extend(get_textitems(nested_nodelist, latex_context, mask_str))
 
     return textitems
 
