@@ -23,6 +23,8 @@ def get_latex_context(out_included_files: list[str]):
             MacroSpec('enquote', '{'),
             MacroSpec('caption', '{'),
             MacroSpec('paragraph', '{'),
+            MacroSpec('footnote', '{'),
+            MacroSpec('title', '[{'),
         ]
     )
 

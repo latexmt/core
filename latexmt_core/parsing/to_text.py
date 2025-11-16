@@ -13,8 +13,19 @@ from .special_commands import nontext_macros
 import pylatexenc.latexnodes.nodes as lw
 
 
-mask_format_str = '~{idx}_'
-mask_regex = '~(\\d+)_'
+mask_str_default = '~%INDEX%_'
+
+
+def get_mask_format_str(mask_str: str = mask_str_default) -> str:
+    return (
+        mask_str.replace('{', '{' * 2)
+        .replace('}', '}' * 2)
+        .replace('%INDEX%', '{idx}')
+    )
+
+
+def get_mask_regex(mask_str: str = mask_str_default) -> str:
+    return re.escape(mask_str).replace('%INDEX%', '(\\d+)')
 
 
 class CustomLatexContextDb(LatexContextDb):
@@ -55,10 +66,12 @@ class LatexNodes2MaskedText(LatexNodes2Text):
     masked_nodes: list[lw.LatexNode]
     __logger: ContextLogger
     latex_context: CustomLatexContextDb
+    mask_str: str
 
-    def __init__(self, latex_context=None, **kwargs):
+    def __init__(self, latex_context=None, mask_str: str = mask_str_default, **kwargs):
         super(LatexNodes2MaskedText, self).__init__(latex_context, **kwargs)
         self.masked_nodes = list()
+        self.mask_str = mask_str
         self.__logger = logger_from_kwargs(**kwargs)
 
     @staticmethod
@@ -79,7 +92,7 @@ class LatexNodes2MaskedText(LatexNodes2Text):
         '''
 
         l2tobj.masked_nodes.append(node)
-        return mask_format_str.format(idx=len(l2tobj.masked_nodes))
+        return get_mask_format_str(l2tobj.mask_str).format(idx=len(l2tobj.masked_nodes))
 
     def node_to_text(self, node, prev_node_hint=None, textcol=0):
         '''
@@ -111,7 +124,7 @@ class LatexNodes2MaskedText(LatexNodes2Text):
             if isinstance(node, lw.LatexEnvironmentNode):
                 # ONLY math environments should ever be handled here
                 if not isinstance(node.spec.body_parsing_state_delta, ParsingStateDeltaEnterMathMode):
-                    self.__logger.warning(f'node_to_text called on non-math environment',
+                    self.__logger.warning('node_to_text called on non-math environment',
                                           extra={'environmentname': node.environmentname})
 
                 return self.mask_nontext_node(node, self)
@@ -201,42 +214,38 @@ custom_ctxdb.set_unknown_environment_spec(
 custom_ctxdb.add_context_category(
     'custom',
     prepend=True,
-    macros=[
-        MacroTextSpec("enquote", simplify_repl='%s'),
-        MacroTextSpec("footnote", simplify_repl=footnote_repl)
-    ]
+    macros=[MacroTextSpec(m, simplify_repl='%s') for m in ['enquote', 'footnote']],
 )
 custom_ctxdb.add_context_category(
     'masked',
     prepend=True,
     macros=[
-        MacroTextSpec(
-            'cite', simplify_repl=LatexNodes2MaskedText.mask_nontext_node),
-        MacroTextSpec(
-            'input', simplify_repl=LatexNodes2MaskedText.mask_nontext_node)
-    ])
+        MacroTextSpec(m, simplify_repl=LatexNodes2MaskedText.mask_nontext_node)
+        for m in ['cite', 'citep', 'citet', 'citeauthor', 'citeyear', 'input']
+    ],
+)
 
 
-def nodelist_to_markupstr(nodelist: list[lw.LatexNode]) -> tuple[MarkupString, list[lw.LatexNode]]:
+def nodelist_to_markupstr(nodelist: list[lw.LatexNode], mask_str: str = mask_str_default) -> tuple[MarkupString, list[lw.LatexNode]]:
     '''
     rely on `pylatexenc.latex2text`... for now
     this has _some_ issues (e.g. it eats known markup macros such as \\emph)
     it remains to be seen if we find this to be too limiting
     '''
-    totext = LatexNodes2MarkupText(latex_context=custom_ctxdb)
+    totext = LatexNodes2MarkupText(latex_context=custom_ctxdb, mask_str=mask_str)
     return totext.nodelist_to_text(nodelist), totext.masked_nodes
 
 
-def nodelist_to_text(nodelist: list[lw.LatexNode]) -> tuple[str, list[lw.LatexNode]]:
+def nodelist_to_text(nodelist: list[lw.LatexNode], mask_str: str = mask_str_default) -> tuple[str, list[lw.LatexNode]]:
     '''
     rely on `pylatexenc.latex2text`... for now
     this has _some_ issues (e.g. it eats known markup macros such as \\emph)
     it remains to be seen if we find this to be too limiting
     '''
-    totext = LatexNodes2MaskedText(latex_context=custom_ctxdb)
+    totext = LatexNodes2MaskedText(latex_context=custom_ctxdb, mask_str=mask_str)
     return totext.nodelist_to_text(nodelist), totext.masked_nodes
 
 
-def is_space_or_masked(text: str | MarkupString) -> bool:
-    text = re.sub(mask_regex, '', str(text))
+def is_space_or_masked(text: str | MarkupString, mask_str: str = mask_str_default) -> bool:
+    text = re.sub(get_mask_regex(mask_str), '', str(text))
     return len(text) == 0 or text.isspace()

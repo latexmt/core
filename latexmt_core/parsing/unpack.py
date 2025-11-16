@@ -4,7 +4,7 @@ from pylatexenc.latexnodes import ParsingStateDeltaEnterMathMode
 from pylatexenc.latexnodes.parsers import LatexGeneralNodesParser
 from typing import cast
 
-from .to_text import nodelist_to_markupstr, is_space_or_masked
+from .to_text import nodelist_to_markupstr, is_space_or_masked, mask_str_default
 from .text_item import TextItem
 from .special_commands import separator_macros, translate_macro_args, env_denylist
 
@@ -28,7 +28,11 @@ def last_node_has_parbreak(nodelist: list[lw.LatexNode]) -> bool:
     return len(nodelist) > 0 and isinstance(nodelist[-1], lw.LatexCharsNode) and nodelist[-1].chars.endswith('\n\n')
 
 
-def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = get_default_latex_context_db()) -> list[TextItem]:
+def get_textitems(
+    nodelist: list[lw.LatexNode],
+    latex_context: LatexContextDb = get_default_latex_context_db(),
+    mask_str: str = mask_str_default
+) -> list[TextItem]:
     logger = logging.getLogger(__name__)
 
     # list of extracted TextItems to be returned
@@ -55,15 +59,20 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
             # use `pylatexenc` built-in functionality for extracting plain text, modified to
             # mask out non-text macros and math environments
             textitem_text, masked_nodes = nodelist_to_markupstr(
-                textitem_nodelist)
+                textitem_nodelist, mask_str
+            )
 
-            if not is_space_or_masked(textitem_text):
-                textitems.append(TextItem(
-                    pos=cast(int, textitem_nodelist[0].pos),
-                    text=textitem_text,
-                    nodelist=textitem_nodelist.copy(),
-                    masked_nodes=masked_nodes,
-                    parent_nodelist=nodelist))
+            if not is_space_or_masked(textitem_text, mask_str):
+                textitems.append(
+                    TextItem(
+                        pos=cast(int, textitem_nodelist[0].pos),
+                        text=textitem_text,
+                        nodelist=textitem_nodelist.copy(),
+                        masked_nodes=masked_nodes,
+                        parent_nodelist=nodelist,
+                        mask_str=mask_str
+                    )
+                )
 
         textitem_nodelist.clear()
 
@@ -161,11 +170,11 @@ def get_textitems(nodelist: list[lw.LatexNode], latex_context: LatexContextDb = 
 
     finish_textitem()
 
-    for n in nested_nodes:
-        nested_nodelist = n.nodelist
-        if isinstance(nested_nodelist, lw.LatexNodeList):
-            nested_nodelist = nested_nodelist.nodelist
-        textitems.extend(get_textitems(nested_nodelist, latex_context))
+    for n in (n for n in nested_nodes if hasattr(n, 'nodelist')):
+            nested_nodelist = n.nodelist
+            if isinstance(nested_nodelist, lw.LatexNodeList):
+                nested_nodelist = nested_nodelist.nodelist
+            textitems.extend(get_textitems(nested_nodelist, latex_context, mask_str))
 
     return textitems
 
