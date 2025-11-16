@@ -195,6 +195,17 @@ class LatexNodes2MarkupText(LatexNodes2MaskedText):
 
 
 # FIXME: put this in a better place
+
+def footnote_repl(node, l2t=None, **kwargs):
+    group_node = None
+    if node.nodeargd and len(node.nodeargd.argnlist) > 1:
+        group_node = node.nodeargd.argnlist[1]
+    if group_node and hasattr(group_node, 'nodelist'):
+        content_text = LatexNodes2Text().nodelist_to_text(group_node.nodelist)
+        return f"{content_text}"
+    else:
+        return ""
+
 custom_ctxdb = CustomLatexContextDb.default()
 custom_ctxdb.set_unknown_macro_spec(
     MacroTextSpec('', simplify_repl=LatexNodes2MaskedText.mask_nontext_node))
