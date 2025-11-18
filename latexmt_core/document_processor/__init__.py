@@ -118,7 +118,7 @@ class DocumentTranslator:
                                       extra={'error': e, 'in_text': in_text})
                 translated_flatlist.extend([
                     '\n\n',
-                    f'\textbf{{NOTE}}: Translation of the following paragraph failed: {e}',
+                    f'\\textbf{{NOTE}}: Translation of the following paragraph failed: {e}',
                     '\n\n'
                 ])
                 out_text_flatlist = in_text.to_markup_list()
