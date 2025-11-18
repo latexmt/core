@@ -30,6 +30,10 @@ def get_translator_aligner(src_lang: str, tgt_lang: str,
             from latexmt_core.translation.opus import OpusTransformersTranslatorAligner
             translator = OpusTransformersTranslatorAligner(
                 src_lang, tgt_lang, **kwargs)
+        case 'api_custom':
+            from latexmt_core.translation.api_custom import CustomTranslator
+            translator = CustomTranslator(
+                src_lang, tgt_lang, **kwargs)
         case 'api_opus':
             from latexmt_core.translation.api_opus import OpusHFInferenceTranslator
             translator = OpusHFInferenceTranslator(
